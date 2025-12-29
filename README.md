@@ -5,5 +5,5 @@
 	•	Node.js (v16+)
 	•	npm or yarn
 	•	Git
-	•	(Optional) Access to Dataloop platform + API token
+	•	THREE js
 	•	Browser with WebGL support (Chrome recommended)
