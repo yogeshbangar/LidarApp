@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import * as THREE from 'three/webgpu'
+// @ts-ignore - TSL node imports
+import { uniform, mix, vec4, sin, time, uv } from 'three/tsl'
 
 const containerRef = ref<HTMLDivElement | null>(null)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+const dualBlendSupported = ref(false)
 
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
 let renderer: THREE.WebGPURenderer
 let cube: THREE.Mesh
+let sphere: THREE.Mesh
 let animationId: number
 
 const emit = defineEmits<{
@@ -50,7 +54,7 @@ onMounted(async () => {
     containerRef.value.appendChild(renderer.domElement)
 
     // Cube geometry
-    const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5)
+    const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
     
     // Material with gradient-like effect
     const material = new THREE.MeshPhongMaterial({
@@ -68,6 +72,42 @@ onMounted(async () => {
     const lineMaterial = new THREE.LineBasicMaterial({ color: 0x00ff88 })
     const wireframe = new THREE.LineSegments(edges, lineMaterial)
     cube.add(wireframe)
+
+    // Sphere with dual-source blending (WebGPU feature)
+    const sphereGeometry = new THREE.SphereGeometry(0.6, 32, 32)
+    
+    // Check if dual-source blending is supported
+    const adapter = await navigator.gpu?.requestAdapter()
+    const hasDualSourceBlending = adapter?.features.has('dual-source-blending') ?? false
+    dualBlendSupported.value = hasDualSourceBlending
+
+    // Create animated color uniforms
+    const color1Uniform = uniform(new THREE.Color(0x000000))
+    const color2Uniform = uniform(new THREE.Color(0x00d9ff))
+
+    // Create a custom node material for the sphere
+    const sphereMaterial = new THREE.MeshBasicNodeMaterial({
+      transparent: true,
+      opacity: 0.85,
+    })
+
+    // Animated color mixing using TSL
+    const animatedMix = sin(time.mul(2)).mul(0.5).add(0.5)
+    const uvCoord = uv()
+    const gradientFactor = uvCoord.y.add(animatedMix.mul(0.3))
+    
+    // Blend between two colors based on UV and time
+    const blendedColor = mix(
+      vec4(color1Uniform, 1.0),
+      vec4(color2Uniform, 1.0),
+      gradientFactor
+    )
+    
+    sphereMaterial.colorNode = blendedColor
+
+    sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
+    sphere.position.set(2, 0, 0)
+    scene.add(sphere)
 
     // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
@@ -88,6 +128,13 @@ onMounted(async () => {
       animationId = requestAnimationFrame(animate)
       cube.rotation.x += 0.01
       cube.rotation.y += 0.015
+      
+      // Animate sphere - orbit around cube
+      const t = Date.now() * 0.001
+      sphere.position.x = Math.cos(t) * 2
+      sphere.position.z = Math.sin(t) * 2
+      sphere.rotation.y += 0.02
+      
       renderer.render(scene, camera)
     }
     animate()
@@ -118,7 +165,11 @@ onUnmounted(() => {
   <div class="cube-overlay">
     <div class="cube-modal">
       <div class="modal-header">
-        <h2>3D Cube Viewer <span class="badge">WebGPU</span></h2>
+        <h2>
+          3D Viewer 
+          <span class="badge">WebGPU</span>
+          <span v-if="dualBlendSupported" class="badge badge-blend">Dual-Source Blend</span>
+        </h2>
         <button class="close-btn" @click="emit('close')">✕</button>
       </div>
       <div ref="containerRef" class="canvas-container">
@@ -230,6 +281,11 @@ onUnmounted(() => {
   margin-left: 0.5rem;
   vertical-align: middle;
   font-weight: 700;
+}
+
+.badge-blend {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: #fff;
 }
 
 .loading,
