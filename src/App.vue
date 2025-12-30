@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+// @ts-ignore - Vue SFC types handled by Volar
 import ThreeCube from './components/ThreeCube.vue'
 
 const message = ref('Hello World!')
