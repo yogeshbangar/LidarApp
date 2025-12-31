@@ -3,13 +3,9 @@ import { ref } from 'vue'
 // @ts-ignore - Vue SFC types handled by Volar
 import ThreeCube from './components/ThreeCube.vue'
 
-const message = ref('Hello World!')
-const count = ref(0)
+const message = ref('Light wave cube!')
 const showCube = ref(false)
 
-const increment = () => {
-  count.value++
-}
 </script>
 
 <template>
@@ -18,9 +14,6 @@ const increment = () => {
     <p class="subtitle">Welcome to Vue 3 + Vite + TypeScript</p>
     
     <div class="card">
-      <button @click="increment">
-        Count is: {{ count }}
-      </button>
       <button class="cube-btn" @click="showCube = true">
         🎲 Open 3D Cube
       </button>

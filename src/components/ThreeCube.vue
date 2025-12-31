@@ -3,6 +3,8 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import * as THREE from 'three/webgpu'
 // @ts-ignore - TSL node imports
 import { uniform, mix, vec4, sin, time, uv } from 'three/tsl'
+// @ts-ignore - OrbitControls
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const containerRef = ref<HTMLDivElement | null>(null)
 const isLoading = ref(true)
@@ -12,8 +14,11 @@ const dualBlendSupported = ref(false)
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
 let renderer: THREE.WebGPURenderer
+let controls: OrbitControls
 let cube: THREE.Mesh
 let sphere: THREE.Mesh
+let stars: THREE.Points
+let nebula: THREE.Mesh
 let animationId: number
 
 const emit = defineEmits<{
@@ -33,7 +38,7 @@ onMounted(async () => {
   try {
     // Scene
     scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x0a0a1a)
+    scene.background = new THREE.Color(0x020208)
 
     // Camera
     camera = new THREE.PerspectiveCamera(
@@ -52,6 +57,110 @@ onMounted(async () => {
     // Initialize WebGPU renderer (async)
     await renderer.init()
     containerRef.value.appendChild(renderer.domElement)
+
+    // OrbitControls for camera interaction
+    controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.dampingFactor = 0.05
+    controls.enableZoom = true
+    controls.enablePan = true
+    controls.minDistance = 2
+    controls.maxDistance = 50
+    controls.autoRotate = false
+    controls.autoRotateSpeed = 0.5
+
+    // ============ 3D BACKGROUND ============
+    
+    // Create starfield
+    const starCount = 2000
+    const starGeometry = new THREE.BufferGeometry()
+    const starPositions = new Float32Array(starCount * 3)
+    const starColors = new Float32Array(starCount * 3)
+    const starSizes = new Float32Array(starCount)
+    
+    for (let i = 0; i < starCount; i++) {
+      const i3 = i * 3
+      // Distribute stars in a sphere around the scene
+      const radius = 15 + Math.random() * 35
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      
+      starPositions[i3] = radius * Math.sin(phi) * Math.cos(theta)
+      starPositions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta)
+      starPositions[i3 + 2] = radius * Math.cos(phi)
+      
+      // Random star colors (white, blue-white, cyan tints)
+      const colorChoice = Math.random()
+      if (colorChoice < 0.6) {
+        // White stars
+        starColors[i3] = 0.9 + Math.random() * 0.1
+        starColors[i3 + 1] = 0.9 + Math.random() * 0.1
+        starColors[i3 + 2] = 1.0
+      } else if (colorChoice < 0.85) {
+        // Cyan stars
+        starColors[i3] = 0.0
+        starColors[i3 + 1] = 0.8 + Math.random() * 0.2
+        starColors[i3 + 2] = 1.0
+      } else {
+        // Purple/pink stars
+        starColors[i3] = 0.8 + Math.random() * 0.2
+        starColors[i3 + 1] = 0.3
+        starColors[i3 + 2] = 1.0
+      }
+      
+      starSizes[i] = Math.random() * 2 + 0.5
+    }
+    
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
+    starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3))
+    starGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1))
+    
+    const starMaterial = new THREE.PointsMaterial({
+      size: 0.15,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.9,
+      sizeAttenuation: true,
+    })
+    
+    stars = new THREE.Points(starGeometry, starMaterial)
+    scene.add(stars)
+    
+    // Create nebula clouds (large transparent spheres with gradient)
+    const nebulaGeometry = new THREE.SphereGeometry(25, 32, 32)
+    const nebulaMaterial = new THREE.MeshBasicNodeMaterial({
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.BackSide,
+    })
+    
+    // Animated nebula color using TSL
+    const nebulaTime = time.mul(0.1)
+    const nebulaUV = uv()
+    const nebulaMix = sin(nebulaTime.add(nebulaUV.x.mul(3))).mul(0.5).add(0.5)
+    const nebulaColor1 = vec4(0.1, 0.0, 0.3, 0.2)
+    const nebulaColor2 = vec4(0.0, 0.2, 0.4, 0.2)
+    nebulaMaterial.colorNode = mix(nebulaColor1, nebulaColor2, nebulaMix)
+    
+    nebula = new THREE.Mesh(nebulaGeometry, nebulaMaterial)
+    scene.add(nebula)
+    
+    // Add a second nebula layer for depth
+    const nebula2Geometry = new THREE.SphereGeometry(20, 32, 32)
+    const nebula2Material = new THREE.MeshBasicNodeMaterial({
+      transparent: true,
+      opacity: 0.1,
+      side: THREE.BackSide,
+    })
+    const nebula2Mix = sin(nebulaTime.mul(1.5).add(nebulaUV.y.mul(2))).mul(0.5).add(0.5)
+    const nebula2Color1 = vec4(0.0, 0.1, 0.2, 0.15)
+    const nebula2Color2 = vec4(0.2, 0.0, 0.3, 0.15)
+    nebula2Material.colorNode = mix(nebula2Color1, nebula2Color2, nebula2Mix)
+    
+    const nebula2 = new THREE.Mesh(nebula2Geometry, nebula2Material)
+    scene.add(nebula2)
+
+    // ============ END 3D BACKGROUND ============
 
     // Cube geometry
     const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
@@ -126,6 +235,11 @@ onMounted(async () => {
     // Animation loop
     const animate = () => {
       animationId = requestAnimationFrame(animate)
+      
+      // Update controls (required for damping)
+      controls.update()
+      
+      // Rotate cube
       cube.rotation.x += 0.01
       cube.rotation.y += 0.015
       
@@ -134,6 +248,13 @@ onMounted(async () => {
       sphere.position.x = Math.cos(t) * 2
       sphere.position.z = Math.sin(t) * 2
       sphere.rotation.y += 0.02
+      
+      // Slowly rotate starfield for immersive effect
+      stars.rotation.y += 0.0003
+      stars.rotation.x += 0.0001
+      
+      // Rotate nebula slightly
+      nebula.rotation.y -= 0.0002
       
       renderer.render(scene, camera)
     }
@@ -157,6 +278,7 @@ const handleResize = () => {
 onUnmounted(() => {
   cancelAnimationFrame(animationId)
   window.removeEventListener('resize', handleResize)
+  controls?.dispose()
   renderer?.dispose()
 })
 </script>
@@ -211,6 +333,7 @@ onUnmounted(() => {
   box-shadow: 0 0 40px rgba(0, 217, 255, 0.2);
   overflow: hidden;
   width: 90%;
+  height: 90%;
   max-width: 700px;
   animation: slideUp 0.4s ease;
 }
@@ -265,7 +388,7 @@ onUnmounted(() => {
 
 .canvas-container {
   width: 100%;
-  height: 450px;
+  height: 100%;
   position: relative;
 }
 
