@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import { ToastType } from '../util/constant'
 
 export interface ToastMessage {
   id: number
-  type: 'success' | 'error' | 'warning' | 'info'
+  type: ToastType
   message: string
   duration?: number
 }
@@ -31,17 +32,17 @@ const removeToast = (id: number) => {
   }
 }
 
-const success = (message: string, duration?: number) => addToast('success', message, duration)
-const error = (message: string, duration?: number) => addToast('error', message, duration)
-const warning = (message: string, duration?: number) => addToast('warning', message, duration)
-const info = (message: string, duration?: number) => addToast('info', message, duration)
+const success = (message: string, duration?: number) => addToast(ToastType.SUCCESS, message, duration)
+const error = (message: string, duration?: number) => addToast(ToastType.ERROR, message, duration)
+const warning = (message: string, duration?: number) => addToast(ToastType.WARNING, message, duration)
+const info = (message: string, duration?: number) => addToast(ToastType.INFO, message, duration)
 
 const getIcon = (type: ToastMessage['type']) => {
   switch (type) {
-    case 'success': return '✓'
-    case 'error': return '✕'
-    case 'warning': return '⚠'
-    case 'info': return 'ℹ'
+    case ToastType.SUCCESS: return '✓'
+    case ToastType.ERROR: return '✕'
+    case ToastType.WARNING: return '⚠'
+    case ToastType.INFO: return 'ℹ'
   }
 }
 
