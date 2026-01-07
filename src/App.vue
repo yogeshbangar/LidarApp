@@ -4,10 +4,13 @@ import { ref } from 'vue'
 import ThreeCube from './components/ThreeCube.vue'
 // @ts-ignore - Vue SFC types handled by Volar
 import ToastContainer from './components/ToastContainer.vue'
+// @ts-ignore - Vue SFC types handled by Volar
+import SmokeShader from './components/SmokeShader.vue'
 import { useToast } from './composables/useToast'
 
 const message = ref('Light wave cube!')
 const showCube = ref(false)
+const showSmoke = ref(false)
 
 const toast = useToast()
 
@@ -26,6 +29,9 @@ const showInfo = () => toast.info('New features are available. Check them out!')
       <button class="cube-btn" @click="showCube = true">
         🎲 Open 3D Cube
       </button>
+      <button class="smoke-btn" @click="showSmoke = true">
+        🌫️ Enter Smoke Realm
+      </button>
     </div>
 
     <div class="toast-demo">
@@ -39,6 +45,7 @@ const showInfo = () => toast.info('New features are available. Check them out!')
     </div>
 
     <ThreeCube v-if="showCube" @close="showCube = false" />
+    <SmokeShader v-if="showSmoke" @close="showSmoke = false" />
     <ToastContainer />
   </div>
 </template>
@@ -108,6 +115,15 @@ button {
 
 .cube-btn:hover {
   box-shadow: 0 8px 25px rgba(254, 202, 87, 0.4);
+}
+
+.smoke-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.smoke-btn:hover {
+  box-shadow: 0 8px 25px rgba(118, 75, 162, 0.5);
 }
 
 button:hover {
