@@ -451,6 +451,38 @@ onUnmounted(() => {
 const handleClose = () => {
   emit('close')
 }
+const myAtoi = (s: string) =>{
+    const INT_MIN = -2147483648;
+    const INT_MAX = 2147483647;
+
+    let i = 0, n = s.length;
+    let sign = 1;
+    let result = 0;
+
+    // Skip leading whitespace
+    while (i < n && s[i] === ' ') i++;
+
+    // Handle optional sign
+    if (i < n && (s[i] === '+' || s[i] === '-')) {
+        sign = s[i] === '-' ? -1 : 1;
+        i++;
+    }
+
+    // Convert digits to number
+    while (i < n && s[i] >= '0' && s[i] <= '9') {
+        const digit = s.charCodeAt(i) - 48;
+
+        // Check for overflow/underflow
+        if (result > Math.floor((INT_MAX - digit) / 10)) {
+            return sign === 1 ? INT_MAX : INT_MIN;
+        }
+
+        result = result * 10 + digit;
+        i++;
+    }
+
+    return result * sign;
+};
 </script>
 
 <template>
