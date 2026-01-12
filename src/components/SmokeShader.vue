@@ -450,6 +450,8 @@ onUnmounted(() => {
 
 const handleClose = () => {
   emit('close')
+  const result = myAtoi('123')
+  console.log(result)
 }
 const myAtoi = (s: string) =>{
     const INT_MIN = -2147483648;
