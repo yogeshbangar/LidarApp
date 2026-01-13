@@ -6,12 +6,14 @@ import ThreeCube from './components/ThreeCube.vue'
 import ToastContainer from './components/ToastContainer.vue'
 // @ts-ignore - Vue SFC types handled by Volar
 import SmokeShader from './components/SmokeShader.vue'
+// @ts-ignore - Vue SFC types handled by Volar
+import PingPong from './components/pingPong.vue'
 import { useToast } from './composables/useToast'
 
 const message = ref('Light wave cube!')
 const showCube = ref(false)
 const showSmoke = ref(false)
-
+const showPingPong = ref(false)
 const toast = useToast()
 
 const showSuccess = () => toast.success('Operation completed successfully!')
@@ -32,6 +34,9 @@ const showInfo = () => toast.info('New features are available. Check them out!')
       <button class="smoke-btn" @click="showSmoke = true">
         🌫️ Enter Smoke Realm
       </button>
+      <button class="ping-pong-btn" @click="showPingPong = true">
+        � Enter Ping Pong 
+      </button>
     </div>
 
     <div class="toast-demo">
@@ -46,6 +51,7 @@ const showInfo = () => toast.info('New features are available. Check them out!')
 
     <ThreeCube v-if="showCube" @close="showCube = false" />
     <SmokeShader v-if="showSmoke" @close="showSmoke = false" />
+    <PingPong v-if="showPingPong" @close="showPingPong = false" />
     <ToastContainer />
   </div>
 </template>
