@@ -13,11 +13,11 @@ let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGPURenderer;
 let controls: OrbitControls;
-let cube: THREE.Mesh;
 let sphere: THREE.Mesh;
 let stars: THREE.Points;
 let nebula: THREE.Mesh;
 let animationId: number;
+let cylinderGroup: THREE.Group;
 
 const emit = defineEmits<{ close: [] }>();
 
@@ -48,14 +48,6 @@ onMounted(async () => {
     await renderer.init();
     containerRef.value.appendChild(renderer.domElement);
     controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.enableZoom = true;
-    controls.enablePan = true;
-    controls.minDistance = 2;
-    controls.maxDistance = 50;
-    controls.autoRotate = false;
-    controls.autoRotateSpeed = 0.5;
     const starCount = 2000;
     const starGeometry = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
@@ -149,26 +141,7 @@ onMounted(async () => {
 
     // ============ END 3D BACKGROUND ============
 
-    // Cube geometry
-    const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-
-    // Material with gradient-like effect
-    const material = new THREE.MeshPhongMaterial({
-      color: 0x00d9ff,
-      emissive: 0x00ff88,
-      emissiveIntensity: 0.2,
-      shininess: 100,
-    });
-
-    cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
-
-    // Add edges for better visibility
-    const edges = new THREE.EdgesGeometry(geometry);
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x00ff88 });
-    const wireframe = new THREE.LineSegments(edges, lineMaterial);
-    cube.add(wireframe);
-
+    
     // Sphere with dual-source blending (WebGPU feature)
     const sphereGeometry = new THREE.SphereGeometry(0.6, 32, 32);
 
@@ -206,6 +179,14 @@ onMounted(async () => {
     sphere.position.set(2, 0, 0);
     scene.add(sphere);
 
+    cylinderGroup = new THREE.Group();
+    for (let i = 0; i < 10; i++) {
+      const cylinder = createCylinderGroup();
+      cylinder.position.y = -10 + i * 5;
+      cylinderGroup.add(cylinder);
+    }
+    scene.add(cylinderGroup);
+    cylinderGroup.position.set(0, 0, -10);
     // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
@@ -220,29 +201,21 @@ onMounted(async () => {
 
     isLoading.value = false;
 
-    // Animation loop
+    
     const animate = () => {
       animationId = requestAnimationFrame(animate);
 
-      // Update controls (required for damping)
-      controls.update();
-
-      // Rotate cube
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.015;
-
-      // Animate sphere - orbit around cube
-      const t = Date.now() * 0.001;
-      sphere.position.x = Math.cos(t) * 2;
-      sphere.position.z = Math.sin(t) * 2;
-      sphere.rotation.y += 0.02;
-
-      // Slowly rotate starfield for immersive effect
-      stars.rotation.y += 0.0003;
-      stars.rotation.x += 0.0001;
 
       // Rotate nebula slightly
       nebula.rotation.y -= 0.0002;
+
+      for (let i = 0; i < cylinderGroup.children.length; i++) {
+        cylinderGroup.children[i].position.y += 0.02;
+        if (cylinderGroup.children[i].position.y > 10) {
+          cylinderGroup.children[i].position.y = -10;
+        }
+      }
+      
 
       renderer.render(scene, camera);
     };
@@ -255,7 +228,23 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
-
+const createCylinderGroup = () => {
+    const cylinderGroup = new THREE.Group();
+    const cylinderGeometry = new THREE.CylinderGeometry(1, 1, 10, 32);
+    const cylinderMaterial = new THREE.MeshBasicNodeMaterial({
+      transparent: true,
+      opacity: 0.7,
+    });
+    const cylinder1 = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+    const cylinder2 = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+    cylinder1.rotation.z = Math.PI / 2;
+    cylinder2.rotation.z = Math.PI / 2;
+    cylinder1.position.x = -8;
+    cylinder2.position.x = 8;
+    cylinderGroup.add(cylinder1);
+    cylinderGroup.add(cylinder2);
+  return cylinderGroup;
+};
 const handleResize = () => {
   if (!containerRef.value) return;
   camera.aspect =
