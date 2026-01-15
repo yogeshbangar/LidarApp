@@ -18,6 +18,7 @@ let stars: THREE.Points;
 let nebula: THREE.Mesh;
 let animationId: number;
 let cylinderGroup: THREE.Group;
+let cylinderTexture: THREE.Texture | null = null;
 
 const emit = defineEmits<{ close: [] }>();
 
@@ -184,6 +185,7 @@ onMounted(async () => {
       const cylinder = createCylinderGroup();
       cylinder.position.y = -10 + i * 5;
       cylinderGroup.add(cylinder);
+      console.log(cylinder.position.y);
     }
     scene.add(cylinderGroup);
     cylinderGroup.position.set(0, 0, -10);
@@ -204,19 +206,21 @@ onMounted(async () => {
     
     const animate = () => {
       animationId = requestAnimationFrame(animate);
-
-
-      // Rotate nebula slightly
-      nebula.rotation.y -= 0.0002;
-
       for (let i = 0; i < cylinderGroup.children.length; i++) {
-        cylinderGroup.children[i].position.y += 0.02;
-        if (cylinderGroup.children[i].position.y > 10) {
-          cylinderGroup.children[i].position.y = -10;
+        cylinderGroup.children[i].position.y += 0.1;
+        cylinderGroup.children[i].rotation.x += .01;
+        if (cylinderGroup.children[i].position.y > 20) {
+          const cGroup = cylinderGroup.children[i];
+          if(i < cylinderGroup.children.length - 1) {
+            cGroup.position.y = cylinderGroup.children[i+1].position.y - 4;
+          } else {
+            cGroup.position.y = cylinderGroup.children[0].position.y - 4;
+          }
+          const randomX = Math.random() * 20 - 10;
+          cGroup.children[0].position.x = randomX - 12;
+          cGroup.children[1].position.x = randomX + 12;
         }
       }
-      
-
       renderer.render(scene, camera);
     };
     animate();
@@ -230,17 +234,23 @@ onMounted(async () => {
 });
 const createCylinderGroup = () => {
     const cylinderGroup = new THREE.Group();
-    const cylinderGeometry = new THREE.CylinderGeometry(1, 1, 10, 32);
-    const cylinderMaterial = new THREE.MeshBasicNodeMaterial({
-      transparent: true,
-      opacity: 0.7,
+    const cylinderGeometry = new THREE.CylinderGeometry(1, 1, 20, 32);
+    if (!cylinderTexture) {
+      const textureLoader = new THREE.TextureLoader();
+      cylinderTexture = textureLoader.load("/tex.jpg");
+      cylinderTexture.wrapS = THREE.RepeatWrapping;
+      cylinderTexture.wrapT = THREE.RepeatWrapping;
+      cylinderTexture.repeat.set(1, 2);
+    }
+    const cylinderMaterial = new THREE.MeshBasicMaterial({
+      map: cylinderTexture
     });
     const cylinder1 = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
     const cylinder2 = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
     cylinder1.rotation.z = Math.PI / 2;
     cylinder2.rotation.z = Math.PI / 2;
-    cylinder1.position.x = -8;
-    cylinder2.position.x = 8;
+    cylinder1.position.x = -12;
+    cylinder2.position.x = 12;
     cylinderGroup.add(cylinder1);
     cylinderGroup.add(cylinder2);
   return cylinderGroup;
