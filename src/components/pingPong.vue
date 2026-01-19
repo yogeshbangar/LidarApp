@@ -49,6 +49,7 @@ onMounted(async () => {
     await renderer.init();
     containerRef.value.appendChild(renderer.domElement);
     controls = new OrbitControls(camera, renderer.domElement);
+    window.addEventListener("keydown", handleKeyDown);
     const starCount = 2000;
     const starGeometry = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
@@ -144,7 +145,7 @@ onMounted(async () => {
 
     
     // Sphere with dual-source blending (WebGPU feature)
-    const sphereGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+    const sphereGeometry = new THREE.SphereGeometry(0.2, 32, 32);
 
     // Check if dual-source blending is supported
     const adapter = await navigator.gpu?.requestAdapter();
@@ -177,13 +178,13 @@ onMounted(async () => {
     sphereMaterial.colorNode = blendedColor;
 
     sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    sphere.position.set(2, 0, 0);
+    sphere.position.set(0, 0, 0);
     scene.add(sphere);
 
     cylinderGroup = new THREE.Group();
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       const cylinder = createCylinderGroup();
-      cylinder.position.y = -10 + i * 5;
+      cylinder.position.y = -20 + i * 10;
       cylinderGroup.add(cylinder);
       console.log(cylinder.position.y);
     }
@@ -203,18 +204,18 @@ onMounted(async () => {
 
     isLoading.value = false;
 
-    
+    let speed = 0.05;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
       for (let i = 0; i < cylinderGroup.children.length; i++) {
-        cylinderGroup.children[i].position.y += 0.1;
+        cylinderGroup.children[i].position.y += speed;
         cylinderGroup.children[i].rotation.x += .01;
         if (cylinderGroup.children[i].position.y > 20) {
           const cGroup = cylinderGroup.children[i];
           if(i < cylinderGroup.children.length - 1) {
-            cGroup.position.y = cylinderGroup.children[i+1].position.y - 4;
+            cGroup.position.y = cylinderGroup.children[i+1].position.y - 10;
           } else {
-            cGroup.position.y = cylinderGroup.children[0].position.y - 4;
+            cGroup.position.y = cylinderGroup.children[0].position.y - 10;
           }
           const randomX = Math.random() * 20 - 10;
           cGroup.children[0].position.x = randomX - 12;
@@ -249,8 +250,9 @@ const createCylinderGroup = () => {
     const cylinder2 = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
     cylinder1.rotation.z = Math.PI / 2;
     cylinder2.rotation.z = Math.PI / 2;
-    cylinder1.position.x = -12;
-    cylinder2.position.x = 12;
+    const randomX = Math.random() * 20 - 10;
+    cylinder1.position.x = randomX - 12;
+    cylinder2.position.x = randomX + 12;
     cylinderGroup.add(cylinder1);
     cylinderGroup.add(cylinder2);
   return cylinderGroup;
@@ -269,9 +271,18 @@ const handleResize = () => {
 onUnmounted(() => {
   cancelAnimationFrame(animationId);
   window.removeEventListener("resize", handleResize);
+  window.removeEventListener("keydown", handleKeyDown);
   controls?.dispose();
   renderer?.dispose();
 });
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (!sphere) return;
+  if (event.key === "ArrowLeft") {
+    sphere.position.x -= .1;
+  } else if (event.key === "ArrowRight") {
+    sphere.position.x += .1;
+  }
+};
 </script>
   
   <template>
