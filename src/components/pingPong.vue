@@ -290,7 +290,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
     <div ref="containerRef" class="canvas-container">
       <div v-if="isLoading" class="loading">
         <div class="spinner"></div>
-        <p>Initializing WebGPU...</p>
+        <p>Initializing hututu games software private limited...</p>
       </div>
       <div v-if="error" class="error">
         <p>{{ error }}</p>
