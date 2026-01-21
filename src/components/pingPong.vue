@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import * as THREE from "three/webgpu";
 import { uniform, mix, vec4, sin, time, uv } from "three/tsl";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { KeyboardKey } from "../util/constant";
 
 const containerRef = ref<HTMLDivElement | null>(null);
 const isLoading = ref(true);
@@ -146,6 +147,7 @@ onMounted(async () => {
     
     // Sphere with dual-source blending (WebGPU feature)
     const sphereGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+    const sphereRadius = sphereGeometry.parameters.radius;
 
     // Check if dual-source blending is supported
     const adapter = await navigator.gpu?.requestAdapter();
@@ -204,6 +206,24 @@ onMounted(async () => {
 
     isLoading.value = false;
 
+    const sphereCollisionSphere = new THREE.Sphere();
+    const cylinderCollisionBox = new THREE.Box3();
+    const isSphereCollidingWithCylinders = () => {
+      sphereCollisionSphere.center.copy(sphere.position);
+      sphereCollisionSphere.radius = sphereRadius;
+      for (const group of cylinderGroup.children) {
+        if (!(group instanceof THREE.Group)) continue;
+        for (const child of group.children) {
+          cylinderCollisionBox.setFromObject(child);
+          if (cylinderCollisionBox.intersectsSphere(sphereCollisionSphere)) {
+            console.log("Collision detected");
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
     let speed = 0.05;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
@@ -221,6 +241,11 @@ onMounted(async () => {
           cGroup.children[0].position.x = randomX - 12;
           cGroup.children[1].position.x = randomX + 12;
         }
+      }
+      if (isSphereCollidingWithCylinders()) {
+        sphere.position.y += speed;
+      } else {
+        sphere.position.y -= 0.01;
       }
       renderer.render(scene, camera);
     };
@@ -277,9 +302,9 @@ onUnmounted(() => {
 });
 const handleKeyDown = (event: KeyboardEvent) => {
   if (!sphere) return;
-  if (event.key === "ArrowLeft") {
+  if (event.key === KeyboardKey.ARROW_LEFT  ) {
     sphere.position.x -= .1;
-  } else if (event.key === "ArrowRight") {
+  } else if (event.key === KeyboardKey.ARROW_RIGHT) {
     sphere.position.x += .1;
   }
 };
