@@ -1,50 +1,70 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from "vue";
 // @ts-ignore - Vue SFC types handled by Volar
-import ThreeCube from './components/ThreeCube.vue'
+import ThreeCube from "./components/ThreeCube.vue";
 // @ts-ignore - Vue SFC types handled by Volar
-import ToastContainer from './components/ToastContainer.vue'
+import ToastContainer from "./components/ToastContainer.vue";
 // @ts-ignore - Vue SFC types handled by Volar
-import SmokeShader from './components/SmokeShader.vue'
+import SmokeShader from "./components/SmokeShader.vue";
 // @ts-ignore - Vue SFC types handled by Volar
-import PingPong from './components/pingPong.vue'
-import { useToast } from './composables/useToast'
+import PingPong from "./components/pingPong.vue";
+import { useToast } from "./composables/useToast";
 
-const message = ref('Light wave cube!')
-const showCube = ref(false)
-const showSmoke = ref(false)
-const showPingPong = ref(false)
-const toast = useToast()
+const message = ref("Light wave cube!");
+const showCube = ref(false);
+const showSmoke = ref(false);
+const showPingPong = ref(false);
+const toast = useToast();
 
-const showSuccess = () => toast.success('Operation completed successfully!')
-const showError = () => toast.error('Something went wrong. Please try again.')
-const showWarning = () => toast.warning('Please save your work before continuing.')
-const showInfo = () => toast.info('New features are available. Check them out!')
+const showSuccess = () => {
+  toast.success("Operation completed successfully!");
+  fetch("http://localhost:3000/users", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: "John Doe",
+      email: "john@example.com",
+    }),
+  })
+    .then((res) => res.json())
+    .then((data) => console.log(data))
+    .catch((err) => console.error(err));
+};
+
+const showError = () => toast.error("Something went wrong. Please try again.");
+const showWarning = () =>
+  toast.warning("Please save your work before continuing.");
+const showInfo = () =>
+  toast.info("New features are available. Check them out!");
 </script>
 
 <template>
   <div class="container">
     <h1>{{ message }}</h1>
     <p class="subtitle">Welcome to Vue 3 + Vite + TypeScript</p>
-    
+
     <div class="card">
-      <button class="cube-btn" @click="showCube = true">
-        🎲 Open 3D Cube
-      </button>
+      <button class="cube-btn" @click="showCube = true">🎲 Open 3D Cube</button>
       <button class="smoke-btn" @click="showSmoke = true">
         🌫️ Enter Smoke Realm
       </button>
       <button class="ping-pong-btn" @click="showPingPong = true">
-        � Enter Ping Pong 
+        � Enter Ping Pong
       </button>
     </div>
 
     <div class="toast-demo">
       <p class="demo-label">Toast Notifications:</p>
       <div class="toast-buttons">
-        <button class="toast-btn success" @click="showSuccess">✓ Success</button>
+        <button class="toast-btn success" @click="showSuccess">
+          ✓ Success
+        </button>
         <button class="toast-btn error" @click="showError">✕ Error</button>
-        <button class="toast-btn warning" @click="showWarning">⚠ Warning</button>
+        <button class="toast-btn warning" @click="showWarning">
+          ⚠ Warning
+        </button>
         <button class="toast-btn info" @click="showInfo">ℹ Info</button>
       </div>
     </div>
@@ -65,7 +85,7 @@ const showInfo = () => toast.info('New features are available. Check them out!')
   justify-content: center;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   color: #fff;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 h1 {
@@ -185,9 +205,17 @@ button:active {
   box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
-.toast-btn.success:hover { box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4); }
-.toast-btn.error:hover { box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4); }
-.toast-btn.warning:hover { box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); }
-.toast-btn.info:hover { box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4); }
+.toast-btn.success:hover {
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+.toast-btn.error:hover {
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+}
+.toast-btn.warning:hover {
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+}
+.toast-btn.info:hover {
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
 </style>
 
