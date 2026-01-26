@@ -8,16 +8,20 @@ import ToastContainer from "./components/ToastContainer.vue";
 import SmokeShader from "./components/SmokeShader.vue";
 // @ts-ignore - Vue SFC types handled by Volar
 import PingPong from "./components/pingPong.vue";
+// @ts-ignore - Vue SFC types handled by Volar
+import CustomSpinner from "./components/CustomSpinner.vue";
 import { useToast } from "./composables/useToast";
 
 const message = ref("Light wave cube!");
 const showCube = ref(false);
 const showSmoke = ref(false);
 const showPingPong = ref(false);
+const showSpinner = ref(false);
 const toast = useToast();
 
 const showSuccess = () => {
   toast.success("Operation completed successfully!");
+  showSpinner.value = true;
   fetch("http://localhost:3000/users", {
     method: "POST",
     headers: {
@@ -30,7 +34,12 @@ const showSuccess = () => {
   })
     .then((res) => res.json())
     .then((data) => console.log(data))
-    .catch((err) => console.error(err));
+    .catch((err) => console.error(err))
+    .finally(() => {
+      setTimeout(() => {
+        showSpinner.value = false;
+      }, 1000);
+    });
 };
 
 const showError = () => toast.error("Something went wrong. Please try again.");
@@ -72,6 +81,7 @@ const showInfo = () =>
     <ThreeCube v-if="showCube" @close="showCube = false" />
     <SmokeShader v-if="showSmoke" @close="showSmoke = false" />
     <PingPong v-if="showPingPong" @close="showPingPong = false" />
+    <CustomSpinner v-if="showSpinner" />
     <ToastContainer />
   </div>
 </template>
