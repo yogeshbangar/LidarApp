@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-// @ts-ignore - Vue SFC types handled by Volar
 import ThreeCube from "./components/ThreeCube.vue";
-// @ts-ignore - Vue SFC types handled by Volar
 import ToastContainer from "./components/ToastContainer.vue";
-// @ts-ignore - Vue SFC types handled by Volar
 import SmokeShader from "./components/SmokeShader.vue";
-// @ts-ignore - Vue SFC types handled by Volar
 import PingPong from "./components/pingPong.vue";
-// @ts-ignore - Vue SFC types handled by Volar
 import CustomSpinner from "./components/CustomSpinner.vue";
 import { useToast } from "./composables/useToast";
 

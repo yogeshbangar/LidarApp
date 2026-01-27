@@ -1,12 +1,6 @@
 /// <reference types="vite/client" />
 /// <reference types="@webgpu/types" />
 
-declare module '*.vue' {
-  import type { ComponentOptions } from 'vue'
-  const component: ComponentOptions
-  export default component
-}
-
 // Three.js WebGPU module declaration
 declare module 'three/webgpu' {
   export * from 'three'
@@ -25,6 +19,10 @@ declare module 'three/webgpu' {
     setSize(width: number, height: number, updateStyle?: boolean): void
     setPixelRatio(value: number): void
     dispose(): void
+  }
+  export class MeshBasicNodeMaterial extends import('three').MeshBasicMaterial {
+    constructor(parameters?: import('three').MeshBasicMaterialParameters)
+    colorNode?: unknown
   }
 }
 
