@@ -2,6 +2,8 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const User = require("./user");
+const Game = require("./game");
 
 const app = express();
 const port = 3000;
@@ -21,19 +23,7 @@ mongoose
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-/* ===============================
-   User Schema & Model
-================================ */
-const userSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    age: { type: Number },
-  },
-  { timestamps: true }
-);
 
-const User = mongoose.model("User", userSchema);
 
 /* ===============================
    Routes
@@ -44,6 +34,16 @@ app.get("/users", async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET all games (FETCH from MongoDB)
+app.get("/games", async (req, res) => {
+  try {
+    const games = await Game.find();
+    res.json(games);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
