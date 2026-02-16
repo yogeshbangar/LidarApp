@@ -9,6 +9,10 @@ const gameSchema = new mongoose.Schema(
       description: { type: String, required: true },
       image: { type: String, required: true },
       link: { type: String, required: true },
+      createdAt: { type: Date, default: Date.now },
+      updatedAt: { type: Date, default: Date.now },
+      createdBy: { type: String, required: true },
+      updatedBy: { type: String, required: true },
     },
     { timestamps: true }
   );
