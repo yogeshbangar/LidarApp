@@ -49,6 +49,16 @@ app.get("/games", async (req, res) => {
   }
 });
 
+// GET all organizations (FETCH from MongoDB)
+app.get("/organizations", async (req, res) => {
+  try {
+    const organizations = await Organization.find();
+    res.json(organizations);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST create user
 app.post("/users", async (req, res) => {
   try {
